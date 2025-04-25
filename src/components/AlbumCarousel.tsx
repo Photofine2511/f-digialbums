@@ -113,7 +113,7 @@ const customStyles = `
 
   @media (max-width: 640px) {
     .album-container {
-      padding: 0.75rem !important;
+      padding: 0 !important;
     }
     
     .album-container .embla__slide {
@@ -266,9 +266,9 @@ const AlbumCarousel = ({ images, selectedCoverId }: AlbumCarouselProps) => {
       <style>{customStyles}</style>
       <div className="relative w-full mx-auto">
         {/* Regular Album Container */}
-        <div className="bg-gray-100 p-4 sm:p-8 rounded-lg shadow-xl album-container">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl album-container">
           <div className="relative overflow-hidden rounded-md" ref={emblaRef}>
-            <div className="flex bg-white rounded-md shadow-inner">
+            <div className="flex bg-white dark:bg-gray-800 rounded-md">
               {sortedImages.map((image, index) => (
                 <div 
                   key={image.id} 
@@ -278,7 +278,7 @@ const AlbumCarousel = ({ images, selectedCoverId }: AlbumCarouselProps) => {
                     isTransitioning && index === currentIndex + 1 ? 'embla__slide--next' : ''
                   }`}
                 >
-                  <div className="aspect-[5/3] relative overflow-hidden rounded-md p-2 bg-white aspect-5-3">
+                  <div className="aspect-[5/3] relative overflow-hidden rounded-md p-2 bg-white dark:bg-gray-800 aspect-5-3">
                     <div className="h-full w-full relative">
                       <img 
                         src={image.url} 
@@ -309,12 +309,12 @@ const AlbumCarousel = ({ images, selectedCoverId }: AlbumCarouselProps) => {
           
           {/* Navigation buttons */}
           <div className="flex justify-between items-center mt-4 album-navigation">
-            <div className="text-sm text-gray-600 font-medium flex items-center gap-2 page-info">
+            <div className="text-sm text-gray-600 dark:text-gray-300 font-medium flex items-center gap-2 page-info">
               <span>Page {currentIndex + 1} of {sortedImages.length}</span>
               <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-full hover:bg-purple-100"
+                className="rounded-full hover:bg-purple-100 dark:hover:bg-purple-900"
                 onClick={toggleFullscreen}
               >
                 <Maximize className="h-4 w-4" />
@@ -327,7 +327,7 @@ const AlbumCarousel = ({ images, selectedCoverId }: AlbumCarouselProps) => {
                 disabled={!canScrollPrev || isTransitioning}
                 variant="outline"
                 size="icon"
-                className="rounded-full hover:bg-purple-100 transition-all"
+                className="rounded-full hover:bg-purple-100 dark:hover:bg-purple-900 transition-all"
               >
                 <ChevronLeft className="h-5 w-5" />
               </Button>
@@ -337,7 +337,7 @@ const AlbumCarousel = ({ images, selectedCoverId }: AlbumCarouselProps) => {
                 disabled={!canScrollNext || isTransitioning}
                 variant="outline"
                 size="icon"
-                className="rounded-full hover:bg-purple-100 transition-all"
+                className="rounded-full hover:bg-purple-100 dark:hover:bg-purple-900 transition-all"
               >
                 <ChevronRight className="h-5 w-5" />
               </Button>

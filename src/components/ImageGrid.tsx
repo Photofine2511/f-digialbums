@@ -20,8 +20,8 @@ const ImageGrid = ({ images, onCoverSelect, selectedCoverId, onReorder }: ImageG
   // If no images, show a placeholder
   if (!images || images.length === 0) {
     return (
-      <div className="p-4 border border-gray-300 rounded-md bg-gray-50 text-center">
-        <p className="text-gray-500">No images to display</p>
+      <div className="border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800 text-center">
+        <p className="text-gray-500 dark:text-gray-400">No images to display</p>
       </div>
     );
   }

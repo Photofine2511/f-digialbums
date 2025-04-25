@@ -118,8 +118,8 @@ const CreateAlbum = () => {
   }, [images, selectedCoverId, albumName, photographerName, navigate, saving]);
 
   return (
-    <div className="container mx-auto px-4 py-6 sm:py-8">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center">Create New Album</h1>
+    <div className="container mx-auto py-6 sm:py-8 bg-white dark:bg-gray-900 min-h-screen">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-gray-900 dark:text-white">Create New Album</h1>
       
       {step === 'upload' && (
         <div className="max-w-xl mx-auto">
@@ -129,8 +129,8 @@ const CreateAlbum = () => {
 
       {step === 'cover' && (
         <div className="space-y-6">
-          <h2 className="text-lg sm:text-xl font-semibold mb-4 text-center">Select Cover Photo</h2>
-          <p className="text-center text-gray-600 mb-4">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4 text-center text-gray-900 dark:text-white">Select Cover Photo</h2>
+          <p className="text-center text-gray-600 dark:text-gray-300 mb-4">
             Choose which image will appear as the cover of your album.
             {images.length > 0 ? ` You've uploaded ${images.length} images.` : ' No images available.'}
           </p>
@@ -145,7 +145,7 @@ const CreateAlbum = () => {
               <div className="flex justify-center mt-6">
                 <Button 
                   onClick={() => setStep('arrange')}
-                  className="bg-purple-600 hover:bg-purple-700"
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
                   disabled={!selectedCoverId}
                 >
                   Continue
@@ -153,11 +153,11 @@ const CreateAlbum = () => {
               </div>
             </>
           ) : (
-            <div className="p-8 border border-red-300 rounded-md bg-red-50 text-center">
-              <p className="text-red-600 font-medium">No images available for cover selection</p>
+            <div className="p-8 border border-red-300 dark:border-red-700 rounded-md bg-red-50 dark:bg-red-900/20 text-center">
+              <p className="text-red-600 dark:text-red-400 font-medium">No images available for cover selection</p>
               <Button 
                 onClick={() => setStep('upload')}
-                className="mt-4 bg-red-600 hover:bg-red-700"
+                className="mt-4 bg-red-600 hover:bg-red-700 text-white"
               >
                 Go Back and Upload Images
               </Button>
@@ -168,8 +168,8 @@ const CreateAlbum = () => {
 
       {step === 'arrange' && selectedCoverId && (
         <div className="space-y-6 sm:space-y-8">
-          <h2 className="text-lg sm:text-xl font-semibold mb-4 text-center">Preview Your Digital Album</h2>
-          <p className="text-center text-gray-600 mb-4">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4 text-center text-gray-900 dark:text-white">Preview Your Digital Album</h2>
+          <p className="text-center text-gray-600 dark:text-gray-300 mb-4">
             Preview your album with {images.length} images. Your album cover is set.
           </p>
           <div className="grid grid-cols-1 gap-6 sm:gap-8">

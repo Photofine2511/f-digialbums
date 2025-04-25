@@ -61,14 +61,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   return (
     <div className="space-y-5 w-full">
-      <Card className="p-8 border-2 border-dashed border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors">
+      <Card className="p-8 border-2 border-dashed border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
         <div className="flex flex-col items-center justify-center text-center">
-          <div className="mb-4 bg-purple-100 p-3 rounded-full">
-            <UploadCloud className="h-8 w-8 text-purple-600" />
+          <div className="w-16 h-16 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center mb-4">
+            <UploadCloud className="h-8 w-8 text-purple-600 dark:text-purple-400" />
           </div>
           
-          <h3 className="text-lg font-medium mb-2">Upload Your Photos</h3>
-          <p className="text-gray-500 mb-6 max-w-md">
+          <h3 className="text-lg font-medium mb-2 text-gray-900 dark:text-white">Upload Your Photos</h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md">
             Select images to create your digital album. You can upload multiple images at once.
           </p>
           
@@ -82,8 +82,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       </Card>
       
       {isUploading && (
-        <div className="flex items-center justify-center p-4">
-          <Loader2 className="h-6 w-6 animate-spin text-purple-600 mr-2" />
+        <div className="flex items-center justify-center p-4 text-gray-700 dark:text-gray-300">
+          <Loader2 className="h-6 w-6 animate-spin text-purple-600 dark:text-purple-400 mr-2" />
           <span>Uploading images...</span>
         </div>
       )}

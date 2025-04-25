@@ -20,13 +20,13 @@ const Header = () => {
   };
   
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <BookOpen className="h-6 w-6 text-purple-600 mr-2" />
-            <span className="font-bold text-xl">AlbumSpark</span>
+            <BookOpen className="h-6 w-6 text-purple-600 dark:text-purple-400 mr-2" />
+            <span className="font-bold text-xl text-gray-900 dark:text-white">AlbumSpark</span>
           </Link>
           
           {/* Mobile Menu Button */}
@@ -36,9 +36,9 @@ const Header = () => {
             aria-label="Toggle menu"
           >
             {isMenuOpen ? (
-              <X className="h-6 w-6 text-gray-500" />
+              <X className="h-6 w-6 text-gray-500 dark:text-gray-400" />
             ) : (
-              <Menu className="h-6 w-6 text-gray-500" />
+              <Menu className="h-6 w-6 text-gray-500 dark:text-gray-400" />
             )}
           </button>
           
@@ -82,13 +82,13 @@ const Header = () => {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 border-t border-gray-200">
+            <div className="px-2 pt-2 pb-3 space-y-1 border-t border-gray-200 dark:border-gray-800">
               <Link 
                 to="/" 
                 className={`block px-3 py-2 rounded-md text-base font-medium ${
                   isActive('/') 
-                    ? 'bg-purple-100 text-purple-700' 
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300' 
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -102,8 +102,8 @@ const Header = () => {
                 to="/albums" 
                 className={`block px-3 py-2 rounded-md text-base font-medium ${
                   isActive('/albums') 
-                    ? 'bg-purple-100 text-purple-700' 
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300' 
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -117,8 +117,8 @@ const Header = () => {
                 to="/create" 
                 className={`block px-3 py-2 rounded-md text-base font-medium ${
                   isActive('/create') 
-                    ? 'bg-purple-100 text-purple-700' 
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300' 
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
