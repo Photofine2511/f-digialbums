@@ -55,9 +55,9 @@ const CloudinaryUploader: React.FC<CloudinaryUploaderProps> = ({
       return;
     }
     
-    const tooLargeFile = filesArray.find(file => file.size > 5 * 1024 * 1024);
+    const tooLargeFile = filesArray.find(file => file.size > 30 * 1024 * 1024);
     if (tooLargeFile) {
-      setError(`"${tooLargeFile.name}" exceeds the 5MB size limit.`);
+      setError(`"${tooLargeFile.name}" exceeds the 30MB size limit.`);
       return;
     }
     
