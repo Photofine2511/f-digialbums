@@ -140,13 +140,20 @@ export const uploadImage = async (file: File): Promise<{ id: string; url: string
     const response = await api.post('/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
+        'X-Requested-With': 'XMLHttpRequest'
       },
+      timeout: 30000
     });
+
+    if (!response.data) {
+      console.error('No response data received');
+      throw new Error('No response data received from server');
+    }
 
     return response.data;
   } catch (error) {
     console.error('Error uploading image:', error);
-    return undefined;
+    throw new Error('Image upload failed');
   }
 };
 
@@ -169,18 +176,34 @@ export const uploadMultipleImages = async (files: File[]): Promise<{ id: string;
     }
 
     console.log('Sending multiple files upload request to /upload/multiple');
+    
+    // Remove Content-Type from config to let the browser set it automatically with boundary
     const response = await api.post('/upload/multiple', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
+        // Adding X-Requested-With header to help server identify this as an AJAX request
+        'X-Requested-With': 'XMLHttpRequest'
       },
+      // Add timeout to prevent hanging requests
+      timeout: 60000
     });
 
     console.log('Multiple upload response status:', response.status);
     console.log('Multiple upload response data:', response.data);
     
-    if (!response.data || !Array.isArray(response.data)) {
+    if (!response.data) {
+      console.error('No response data received');
+      throw new Error('No response data received from server');
+    }
+    
+    if (!Array.isArray(response.data)) {
       console.error('Unexpected response format:', response.data);
-      return undefined;
+      throw new Error('Server returned invalid data format');
+    }
+    
+    if (response.data.length === 0) {
+      console.error('Server returned empty array');
+      throw new Error('No images were processed by the server');
     }
     
     return response.data;
@@ -189,6 +212,6 @@ export const uploadMultipleImages = async (files: File[]): Promise<{ id: string;
     if (error instanceof Error) {
       console.error('Error message:', error.message);
     }
-    return undefined;
+    throw new Error('Image upload failed');
   }
 };

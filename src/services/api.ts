@@ -12,7 +12,13 @@ const api = axios.create({
 // as this application doesn't require authentication
 api.interceptors.request.use(
   (config) => {
-    // No authentication token is added to requests
+    // Don't override Content-Type if it's already set for multipart/form-data
+    if (config.headers && 
+        typeof config.headers['Content-Type'] === 'string' && 
+        config.headers['Content-Type'].indexOf('multipart/form-data') !== -1) {
+      // For multipart/form-data, let Axios set the content type with boundary
+      delete config.headers['Content-Type'];
+    }
     return config;
   },
   (error) => {

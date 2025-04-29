@@ -75,27 +75,33 @@ const CloudinaryUploader: React.FC<CloudinaryUploaderProps> = ({
         console.log(`Uploading ${filesArray.length} files as a batch`);
         setUploadProgress(10); // Initial progress
         
-        // Ensure we're using the multiple upload endpoint for multiple files
-        const results = await uploadMultipleImages(filesArray);
-        console.log('Multiple upload results:', results);
-        
-        if (results && Array.isArray(results)) {
-          console.log(`Successfully uploaded ${results.length} images`);
+        try {
+          // Ensure we're using the multiple upload endpoint for multiple files
+          const results = await uploadMultipleImages(filesArray);
+          console.log('Multiple upload results:', results);
           
-          // Keep track of uploads for debugging
-          const newUploads = results.map(r => ({ id: r.id, success: true }));
-          setRecentUploads(prev => [...prev, ...newUploads]);
-          
-          // CRITICAL FIX: Process each image one by one to avoid state issues
-          for (const result of results) {
-            console.log('Processing image for parent component:', result);
-            onImageUploaded(result);
+          if (results && Array.isArray(results)) {
+            setUploadProgress(70);
+            console.log(`Successfully uploaded ${results.length} images`);
+            
+            // Keep track of uploads for debugging
+            const newUploads = results.map(r => ({ id: r.id, success: true }));
+            setRecentUploads(prev => [...prev, ...newUploads]);
+            
+            // CRITICAL FIX: Process each image one by one to avoid state issues
+            for (const result of results) {
+              console.log('Processing image for parent component:', result);
+              onImageUploaded(result);
+            }
+            
+            setUploadProgress(100);
+          } else {
+            throw new Error('No results returned from server');
           }
-          
-          setUploadProgress(100);
-        } else {
-          console.error('Failed to upload multiple images:', results);
-          throw new Error('Failed to upload images');
+        } catch (uploadError) {
+          console.error('Failed to upload multiple images:', uploadError);
+          setError(uploadError instanceof Error ? uploadError.message : 'Failed to upload images');
+          throw uploadError;
         }
       } else {
         // Use single upload for a single file
