@@ -10,6 +10,7 @@ export interface Album {
   images: { id: string; url: string; publicId?: string }[];
   createdAt: string;
   updatedAt?: string;
+  isPasswordProtected?: boolean;
 }
 
 // Format album data from API to client format
@@ -26,7 +27,8 @@ const formatAlbum = (album: any): Album => {
       publicId: img.publicId
     })),
     createdAt: album.createdAt,
-    updatedAt: album.updatedAt
+    updatedAt: album.updatedAt,
+    isPasswordProtected: album.isPasswordProtected
   };
 };
 
@@ -67,13 +69,72 @@ export const getAlbumById = async (id: string): Promise<Album | undefined> => {
   }
 };
 
-// Create a new album
-export const saveAlbum = async (album: Album): Promise<Album | undefined> => {
+// Verify album password
+export const verifyAlbumPassword = async (
+  albumId: string, 
+  password: string
+): Promise<{ success: boolean; message: string; album?: Album }> => {
   try {
-    const response = await api.post('/albums', formatAlbumForAPI(album));
+    const response = await api.post(`/albums/${albumId}/verify-password`, { password });
+    return {
+      success: response.data.success,
+      message: response.data.message,
+      album: response.data.album ? formatAlbum(response.data.album) : undefined
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Failed to verify password'
+    };
+  }
+};
+
+// Create a new album with optional password
+export const saveAlbum = async (album: Album, password?: string): Promise<Album | undefined> => {
+  try {
+    // Start with basic album data
+    const albumData = formatAlbumForAPI(album);
+    
+    // Add password if provided
+    if (password) {
+      albumData.password = password;
+    }
+
+    console.log('Sending album data to server:', { 
+      ...albumData, 
+      password: password ? '[REDACTED]' : undefined,
+      hasPassword: !!password
+    });
+    
+    const response = await api.post('/albums', albumData);
     return formatAlbum(response.data);
   } catch (error) {
     console.error('Error saving album:', error);
+    return undefined;
+  }
+};
+
+// Update album password
+export const updateAlbumPassword = async (
+  albumId: string,
+  newPassword?: string,
+  removePassword?: boolean
+): Promise<Album | undefined> => {
+  try {
+    const data: any = {};
+    
+    if (newPassword) {
+      data.password = newPassword;
+    }
+    
+    if (removePassword) {
+      data.removePassword = true;
+    }
+    
+    const response = await api.put(`/albums/${albumId}`, data);
+    return formatAlbum(response.data);
+  } catch (error) {
+    console.error(`Error updating album password ${albumId}:`, error);
     return undefined;
   }
 };

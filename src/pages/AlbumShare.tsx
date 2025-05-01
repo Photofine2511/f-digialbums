@@ -1,17 +1,42 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { getAlbumById } from '@/services/albumService';
+import { getAlbumById, Album } from '@/services/albumService';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { QRCodeSVG } from 'qrcode.react';
-import { Link, Download } from 'lucide-react';
+import { Link, Download, Lock } from 'lucide-react';
 import { toast } from "sonner";
 
 const AlbumShare = () => {
   const { id } = useParams<{ id: string }>();
-  const album = id ? getAlbumById(id) : undefined;
+  const [album, setAlbum] = useState<Album | undefined>(undefined);
+  const [loading, setLoading] = useState<boolean>(true);
   const shareUrl = `${window.location.origin}/album/${id}`;
   const qrCodeRef = useRef<SVGSVGElement>(null);
+
+  useEffect(() => {
+    const fetchAlbum = async () => {
+      if (!id) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const albumData = await getAlbumById(id);
+        setAlbum(albumData);
+      } catch (error) {
+        console.error("Error fetching album:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAlbum();
+  }, [id]);
+
+  if (loading) {
+    return <div className="text-center py-8">Loading...</div>;
+  }
 
   if (!album) {
     return <div className="text-center py-8">Album not found</div>;
@@ -80,6 +105,16 @@ const AlbumShare = () => {
         <p className="text-center text-gray-600 text-sm sm:text-base">
           Share your album by using the QR code below
         </p>
+        
+        {album.isPasswordProtected && (
+          <div className="flex items-center justify-center space-x-2 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded-md">
+            <Lock className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+            <p className="text-sm text-yellow-600 dark:text-yellow-400">
+              Password protected album
+            </p>
+          </div>
+        )}
+        
         <div className="flex justify-center p-3 sm:p-4 bg-white rounded-lg">
           <QRCodeSVG 
             ref={qrCodeRef}
@@ -111,6 +146,12 @@ const AlbumShare = () => {
         <p className="text-xs sm:text-sm text-gray-500 text-center">
           Print this QR code and attach it to your physical album
         </p>
+        
+        {album.isPasswordProtected && (
+          <p className="text-xs text-center text-gray-500">
+            Remember: Anyone with this QR code will need the password to view the album
+          </p>
+        )}
       </Card>
     </div>
   );

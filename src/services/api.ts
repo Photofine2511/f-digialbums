@@ -3,6 +3,7 @@ import axios from 'axios';
 // Create an Axios instance with default config
 const api = axios.create({
   baseURL: 'https://digialbums.onrender.com/api',
+  // baseURL: 'http://localhost:5000/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -37,6 +38,7 @@ api.interceptors.response.use(
       error.message ||
       'An unexpected error occurred';
     
+    console.error('API Error:', error);
     return Promise.reject(new Error(message));
   }
 );

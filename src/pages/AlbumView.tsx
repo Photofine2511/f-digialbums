@@ -4,12 +4,14 @@ import { getAlbumById, Album } from '@/services/albumService';
 import { Card } from "@/components/ui/card";
 import AlbumCarousel from '@/components/AlbumCarousel';
 import { Camera } from 'lucide-react';
+import AlbumPasswordForm from '@/components/AlbumPasswordForm';
 
 const AlbumView = () => {
   const { id } = useParams<{ id: string }>();
   const [album, setAlbum] = useState<Album | undefined>(undefined);
   const [loading, setLoading] = useState<boolean>(true);
   const [coverImageId, setCoverImageId] = useState<string | null>(null);
+  const [isPasswordVerified, setIsPasswordVerified] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchAlbum = async () => {
@@ -21,6 +23,11 @@ const AlbumView = () => {
       try {
         const albumData = await getAlbumById(id);
         setAlbum(albumData);
+        
+        // Only set albums without password protection as automatically verified
+        if (albumData && !albumData.isPasswordProtected) {
+          setIsPasswordVerified(true);
+        }
         
         // Set the cover image ID
         if (albumData?.images && albumData.images.length > 0) {
@@ -34,7 +41,17 @@ const AlbumView = () => {
     };
 
     fetchAlbum();
+    
+    // Reset verification state when component unmounts or ID changes
+    return () => {
+      setIsPasswordVerified(false);
+    };
   }, [id]);
+
+  const handlePasswordVerified = (verifiedAlbum: Album) => {
+    setAlbum(verifiedAlbum);
+    setIsPasswordVerified(true);
+  };
 
   if (loading) {
     return <div className="text-center py-8">Loading album...</div>;
@@ -42,6 +59,11 @@ const AlbumView = () => {
 
   if (!album) {
     return <div className="text-center py-8">Album not found</div>;
+  }
+
+  // Show password form if album is password protected and not yet verified
+  if (album.isPasswordProtected && !isPasswordVerified) {
+    return <AlbumPasswordForm albumId={album.id} onPasswordVerified={handlePasswordVerified} />;
   }
 
   return (

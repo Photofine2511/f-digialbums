@@ -67,7 +67,7 @@ const CreateAlbum = () => {
     setPhotographerName(name);
   }, []);
 
-  const handleSaveAlbum = useCallback(async () => {
+  const handleSaveAlbum = useCallback(async (password?: string) => {
     if (saving) return;
     
     if (!selectedCoverId || images.length === 0) {
@@ -101,10 +101,12 @@ const CreateAlbum = () => {
       };
 
       console.log("Saving album with images:", newAlbum.images.length);
-      const result = await saveAlbum(newAlbum);
+      console.log(password ? "Album will be password protected" : "Album will not have a password");
+      
+      const result = await saveAlbum(newAlbum, password);
       
       if (result) {
-        toast.success("Album saved successfully!");
+        toast.success(password ? "Password-protected album saved successfully!" : "Album saved successfully!");
         navigate('/albums');
       } else {
         toast.error("Failed to save album");
