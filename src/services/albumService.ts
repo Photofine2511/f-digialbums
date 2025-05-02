@@ -193,18 +193,33 @@ export const removeImageFromAlbum = async (
 };
 
 // Upload image to Cloudinary
-export const uploadImage = async (file: File): Promise<{ id: string; url: string; publicId: string } | undefined> => {
+export const uploadImage = async (
+  file: File, 
+  options?: { 
+    signal?: AbortSignal; 
+    onProgress?: (progress: number) => void 
+  }
+): Promise<{ id: string; url: string; publicId: string } | undefined> => {
   try {
     const formData = new FormData();
     formData.append('image', file);
 
-    const response = await api.post('/upload', formData, {
+    // Create config with extended timeout for large files
+    const config = {
       headers: {
         'Content-Type': 'multipart/form-data',
         'X-Requested-With': 'XMLHttpRequest'
       },
-      timeout: 30000
-    });
+      timeout: 3600000, // Increase timeout to 1 hour for large files
+      signal: options?.signal,
+      onUploadProgress: options?.onProgress ? 
+        (progressEvent: any) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          options.onProgress!(percentCompleted);
+        } : undefined
+    };
+
+    const response = await api.post('/upload', formData, config);
 
     if (!response.data) {
       console.error('No response data received');
@@ -214,12 +229,18 @@ export const uploadImage = async (file: File): Promise<{ id: string; url: string
     return response.data;
   } catch (error) {
     console.error('Error uploading image:', error);
-    throw new Error('Image upload failed');
+    throw error; // Re-throw the error to be handled by the caller
   }
 };
 
 // Upload multiple images to Cloudinary
-export const uploadMultipleImages = async (files: File[]): Promise<{ id: string; url: string; publicId: string }[] | undefined> => {
+export const uploadMultipleImages = async (
+  files: File[],
+  options?: { 
+    signal?: AbortSignal; 
+    onProgress?: (progress: number) => void 
+  }
+): Promise<{ id: string; url: string; publicId: string }[] | undefined> => {
   try {
     console.log(`Creating form data for ${files.length} files`);
     const formData = new FormData();
@@ -238,16 +259,22 @@ export const uploadMultipleImages = async (files: File[]): Promise<{ id: string;
 
     console.log('Sending multiple files upload request to /upload/multiple');
     
-    // Remove Content-Type from config to let the browser set it automatically with boundary
-    const response = await api.post('/upload/multiple', formData, {
+    // Config with extended timeout and progress tracking
+    const config = {
       headers: {
         'Content-Type': 'multipart/form-data',
-        // Adding X-Requested-With header to help server identify this as an AJAX request
         'X-Requested-With': 'XMLHttpRequest'
       },
-      // Add timeout to prevent hanging requests
-      timeout: 60000
-    });
+      timeout: 3600000, // Increase timeout to 1 hour for large files
+      signal: options?.signal,
+      onUploadProgress: options?.onProgress ? 
+        (progressEvent: any) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          options.onProgress!(percentCompleted);
+        } : undefined
+    };
+    
+    const response = await api.post('/upload/multiple', formData, config);
 
     console.log('Multiple upload response status:', response.status);
     console.log('Multiple upload response data:', response.data);

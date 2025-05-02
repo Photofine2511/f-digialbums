@@ -7,22 +7,29 @@ interface CloudinaryUploaderProps {
   onImageUploaded: (imageData: { id: string; url: string; publicId: string }) => void;
   onUploadStart?: () => void;
   onUploadComplete?: () => void;
+  onUploadProgress?: (progress: number) => void;
   className?: string;
   allowMultiple?: boolean;
+  maxFileSizeMB?: number;
+  timeout?: number;
 }
 
 const CloudinaryUploader: React.FC<CloudinaryUploaderProps> = ({ 
   onImageUploaded,
   onUploadStart,
   onUploadComplete,
+  onUploadProgress,
   className = '',
-  allowMultiple = true
+  allowMultiple = true,
+  maxFileSizeMB = 1024, // Default max file size of 1GB
+  timeout = 3600000 // Default timeout of 1 hour (in milliseconds)
 }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [recentUploads, setRecentUploads] = useState<Array<{ id: string, success: boolean }>>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadAbortController = useRef<AbortController | null>(null);
 
   // Log recent uploads for debugging
   useEffect(() => {
@@ -31,6 +38,22 @@ const CloudinaryUploader: React.FC<CloudinaryUploaderProps> = ({
         recentUploads.map(u => `${u.id} - ${u.success ? 'Success' : 'Failed'}`).join(', '));
     }
   }, [recentUploads]);
+
+  // Cleanup abort controller on component unmount
+  useEffect(() => {
+    return () => {
+      if (uploadAbortController.current) {
+        uploadAbortController.current.abort();
+      }
+    };
+  }, []);
+
+  const updateProgress = (progress: number) => {
+    setUploadProgress(progress);
+    if (onUploadProgress) {
+      onUploadProgress(progress);
+    }
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -42,7 +65,7 @@ const CloudinaryUploader: React.FC<CloudinaryUploaderProps> = ({
     // Convert FileList to array
     const filesArray = Array.from(files);
     console.log(`Selected ${filesArray.length} files for upload:`, 
-      filesArray.map(f => `${f.name} (${(f.size / 1024).toFixed(1)}KB)`).join(', '));
+      filesArray.map(f => `${f.name} (${(f.size / (1024 * 1024)).toFixed(2)}MB)`).join(', '));
     
     // Validate file types and sizes
     const invalidTypeFile = filesArray.find(file => {
@@ -55,15 +78,26 @@ const CloudinaryUploader: React.FC<CloudinaryUploaderProps> = ({
       return;
     }
     
-    const tooLargeFile = filesArray.find(file => file.size > 30 * 1024 * 1024);
+    const tooLargeFile = filesArray.find(file => file.size > maxFileSizeMB * 1024 * 1024);
     if (tooLargeFile) {
-      setError(`"${tooLargeFile.name}" exceeds the 30MB size limit.`);
+      setError(`"${tooLargeFile.name}" exceeds the ${maxFileSizeMB}MB size limit.`);
       return;
     }
     
     try {
       setUploading(true);
       setError(null);
+      
+      // Create a new AbortController for this upload
+      uploadAbortController.current = new AbortController();
+      
+      // Set up timeout for long-running uploads
+      const timeoutId = setTimeout(() => {
+        if (uploadAbortController.current) {
+          uploadAbortController.current.abort();
+          setError(`Upload timed out after ${timeout/60000} minutes. Please try again or upload smaller files.`);
+        }
+      }, timeout);
       
       // Notify parent that upload is starting
       if (onUploadStart) {
@@ -73,15 +107,18 @@ const CloudinaryUploader: React.FC<CloudinaryUploaderProps> = ({
       // For multiple files, always use the multiple upload endpoint when there's more than one file
       if (filesArray.length > 1) {
         console.log(`Uploading ${filesArray.length} files as a batch`);
-        setUploadProgress(10); // Initial progress
+        updateProgress(10); // Initial progress
         
         try {
           // Ensure we're using the multiple upload endpoint for multiple files
-          const results = await uploadMultipleImages(filesArray);
+          const results = await uploadMultipleImages(filesArray, {
+            signal: uploadAbortController.current.signal,
+            onProgress: updateProgress
+          });
           console.log('Multiple upload results:', results);
           
           if (results && Array.isArray(results)) {
-            setUploadProgress(70);
+            updateProgress(70);
             console.log(`Successfully uploaded ${results.length} images`);
             
             // Keep track of uploads for debugging
@@ -94,21 +131,29 @@ const CloudinaryUploader: React.FC<CloudinaryUploaderProps> = ({
               onImageUploaded(result);
             }
             
-            setUploadProgress(100);
+            updateProgress(100);
           } else {
             throw new Error('No results returned from server');
           }
         } catch (uploadError) {
-          console.error('Failed to upload multiple images:', uploadError);
-          setError(uploadError instanceof Error ? uploadError.message : 'Failed to upload images');
+          if ((uploadError as Error).name === 'AbortError') {
+            console.error('Upload aborted:', uploadError);
+            setError('Upload was aborted. Please try again.');
+          } else {
+            console.error('Failed to upload multiple images:', uploadError);
+            setError(uploadError instanceof Error ? uploadError.message : 'Failed to upload images');
+          }
           throw uploadError;
         }
       } else {
         // Use single upload for a single file
         console.log(`Uploading single file: ${filesArray[0].name}`);
-        setUploadProgress(10);
+        updateProgress(10);
         
-        const result = await uploadImage(filesArray[0]);
+        const result = await uploadImage(filesArray[0], {
+          signal: uploadAbortController.current.signal,
+          onProgress: updateProgress
+        });
         
         if (result) {
           console.log(`Successfully uploaded ${filesArray[0].name}:`, result);
@@ -118,7 +163,7 @@ const CloudinaryUploader: React.FC<CloudinaryUploaderProps> = ({
           
           // Notify parent component
           onImageUploaded(result);
-          setUploadProgress(100);
+          updateProgress(100);
         } else {
           console.error(`Failed to upload ${filesArray[0].name}`);
           
@@ -133,11 +178,17 @@ const CloudinaryUploader: React.FC<CloudinaryUploaderProps> = ({
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+      
+      // Clear the timeout since the upload completed successfully
+      clearTimeout(timeoutId);
     } catch (err: any) {
       console.error('Upload error:', err);
       setError(err.message || 'Failed to upload image');
     } finally {
       setUploading(false);
+      
+      // Clear the abort controller
+      uploadAbortController.current = null;
       
       // Notify parent that upload is complete
       if (onUploadComplete) {
@@ -145,6 +196,13 @@ const CloudinaryUploader: React.FC<CloudinaryUploaderProps> = ({
       }
       
       setTimeout(() => setUploadProgress(0), 1000); // Reset progress after a delay
+    }
+  };
+
+  const cancelUpload = () => {
+    if (uploadAbortController.current) {
+      uploadAbortController.current.abort();
+      setError('Upload cancelled by user');
     }
   };
 
@@ -160,6 +218,17 @@ const CloudinaryUploader: React.FC<CloudinaryUploaderProps> = ({
           <UploadCloud className="h-5 w-5" />
           <span>{uploading ? `Uploading ${uploadProgress}%...` : 'Select Images'}</span>
         </Button>
+        
+        {uploading && (
+          <Button
+            type="button"
+            onClick={cancelUpload}
+            className="ml-2 bg-red-600 hover:bg-red-700 flex gap-2 items-center px-4 py-2 text-base"
+          >
+            <X className="h-5 w-5" />
+            <span>Cancel</span>
+          </Button>
+        )}
         
         <input
           type="file"
@@ -197,6 +266,7 @@ const CloudinaryUploader: React.FC<CloudinaryUploaderProps> = ({
       {recentUploads.length > 0 && (
         <div className="text-xs text-gray-500">
           Recently uploaded: {recentUploads.length} files
+          {uploading && <span> | Handling large files (up to {maxFileSizeMB}MB)</span>}
         </div>
       )}
     </div>
